@@ -1,8 +1,9 @@
 #!/bin/bash
 
-cd ../cis3750_backend
+cd ../CIS3750_backend
+git pull
 
 
-echo "do something"
+echo "CIS3750 server is now up to date with master."
 
 
