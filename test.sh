@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ../CIS3750_backend
+cd  /opt/cis3750/CIS3750_backend
 
 eval "$(ssh-agent -s)"
 ssh-add /home/sysadmin/.ssh/gitDeployment

@@ -19,7 +19,7 @@ app.post('/git-master-update', function(req, res) {
 
 	res.send(JSON.stringify({"status": 200}));
 
-child = exec('./test.sh', // command line argument directly in string
+child = exec('/opt/cis3750/cis3750_CI/test.sh', // command line argument directly in string
   		function (error, stdout, stderr) {      // one easy function to capture data/errors
     	console.log('stdout: ' + stdout);
     	console.log('stderr: ' + stderr);
