@@ -1,5 +1,8 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var http = require("http");
+
+
 var app = express();
 
 
@@ -30,4 +33,12 @@ child = exec('/opt/cis3750/cis3750_CI/test.sh', // command line argument directl
 
 });
 
-app.listen(3002);
+
+var port = 3002;
+
+var server = http.createServer(app);
+
+server.listen(port, 'localhost');
+server.on('listening', function() {
+    console.log('Express server started on port %s at %s', server.address().port, server.address().address);
+});
