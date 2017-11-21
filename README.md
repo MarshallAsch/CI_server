@@ -1,4 +1,8 @@
 # cis3750_CI
-This is the continuous integration server for the [CIS3750 Team gallium server](https://github.com/MarshallAsch/CIS3750_backend)
 
-The server will listen for a github webhook push event and will update and reload the production server.
+This is a configurable Node.js webhook server, it can receive webhooks and update
+a running server. The server is designed to listen for a GitHub webhook push event
+and will update and reload the production server.
+
+
+This can be configured by adding elements to the integrationFor.json file.

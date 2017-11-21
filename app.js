@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var http = require("http");
 
+var configuration = require(__dirname + "/integrationFor.json");
 
 var app = express();
 
@@ -19,18 +20,32 @@ app.post('/git-master-update', function(req, res) {
 
 	console.log(req.body.ref);
 
+	var id = req.body.repository.id;
+	var foundServer = 0;
 
-	res.send(JSON.stringify({"status": 200}));
+	for (var i = 0; i < configuration.servers.length; i++)
+	{
+		if (configuration.servers[i].repositoryID === id) {
+			child = exec(configuration.servers[i].runScript, function (error, stdout, stderr) {
+				console.log('stdout: ' + stdout);
+				console.log('stderr: ' + stderr);
+		 		if (error !== null) {
+					console.log('exec error: ' + error);
+				}
+			});
 
-child = exec('/opt/cis3750/cis3750_CI/test.sh', // command line argument directly in string
-  		function (error, stdout, stderr) {      // one easy function to capture data/errors
-    	console.log('stdout: ' + stdout);
-    	console.log('stderr: ' + stderr);
-	    if (error !== null) {
-	      console.log('exec error: ' + error);
-	    }
-	});
+			res.status(200);
+			res.send(JSON.stringify({"status": 200}));
+			foundServer = 1;
 
+			break;
+		}
+	}
+
+	if (foundServer === 0) {
+		res.status(404);
+		res.send(JSON.stringify({"status": 404, "message": "Rule for repository \"" + req.body.repository.name + "\" not found"}));
+	}
 });
 
 
@@ -40,5 +55,5 @@ var server = http.createServer(app);
 
 server.listen(port, 'localhost');
 server.on('listening', function() {
-    console.log('Express server started on port %s at %s', server.address().port, server.address().address);
+	console.log('Express server started on %s:%s', server.address().address, server.address().port);
 });

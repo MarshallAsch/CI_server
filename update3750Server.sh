@@ -10,5 +10,3 @@ npm install
 sudo systemctl restart 3750NodeServer.service
 
 echo "CIS3750 server is now up to date with master."
-
-
