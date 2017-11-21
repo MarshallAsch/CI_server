@@ -2,8 +2,11 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var http = require("http");
 
-var configuration = require(__dirname + "/integrationFor.json");
+var fs = require("fs");
 
+var configuration = fs.readFileSync(__dirname + "/integrationFor.json");
+
+configuration = JSON.parse(configuration);
 var app = express();
 
 
@@ -18,14 +21,13 @@ app.use(bodyParser.json());
 
 app.post('/git-master-update', function(req, res) {
 
-	console.log(req.body.ref);
-
 	var id = req.body.repository.id;
 	var foundServer = 0;
 
 	for (var i = 0; i < configuration.servers.length; i++)
 	{
-		if (configuration.servers[i].repositoryID === id) {
+		console.log(id + " " + configuration.servers[i].repositoryID);
+		if (configuration.servers[i].repositoryID == id) {
 			child = exec(configuration.servers[i].runScript, function (error, stdout, stderr) {
 				console.log('stdout: ' + stdout);
 				console.log('stderr: ' + stderr);
@@ -44,7 +46,7 @@ app.post('/git-master-update', function(req, res) {
 
 	if (foundServer === 0) {
 		res.status(404);
-		res.send(JSON.stringify({"status": 404, "message": "Rule for repository \"" + req.body.repository.name + "\" not found"}));
+		res.send(JSON.stringify({"status": 404, "message": "Rule for repository \"" + req.body.repository.name + "\" (" + id + ") not found"}));
 	}
 });
 
