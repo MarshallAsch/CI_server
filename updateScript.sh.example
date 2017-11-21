@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd  /path/to/server
+
+eval "$(ssh-agent -s)"
+ssh-add /path/to/deployment/key/gitDeployment
+git pull
+
+
+sudo systemctl restart webServer.service
+
+echo "server is now up to date with master."

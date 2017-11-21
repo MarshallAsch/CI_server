@@ -22,12 +22,13 @@ app.use(bodyParser.json());
 app.post('/git-master-update', function(req, res) {
 
 	var id = req.body.repository.id;
+	var ref = req.body.ref;
 	var foundServer = 0;
 
 	for (var i = 0; i < configuration.servers.length; i++)
 	{
 		console.log(id + " " + configuration.servers[i].repositoryID);
-		if (configuration.servers[i].repositoryID == id) {
+		if (configuration.servers[i].repositoryID == id && configuration.servers[i].ref == ref) {
 			child = exec(configuration.servers[i].runScript, function (error, stdout, stderr) {
 				console.log('stdout: ' + stdout);
 				console.log('stderr: ' + stderr);
