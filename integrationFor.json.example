@@ -10,6 +10,7 @@
             "repositoryID": "123",
             "ref": "refs/heads/master",
             "runScript": "/path/to/script/to/run2.sh"
+            "event" : "the type of event that this script will be run for"
         }
     ]
 }
