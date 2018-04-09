@@ -59,34 +59,32 @@ function findToUpdate(id, ref, res) {
 }
 
 
-// This is for github web hooks
-app.post('/v1/github', function(req, res) {
-
+// this will do the the web hook for github
+function github(req, res) {
 	var id = req.body.repository.id;
 	var ref = req.body.ref;
 
 	findToUpdate(id, ref, res);
+}
 
-});
-
-
-// this is for gitlab webhooks
-app.post('/v1/gitlab', function(req, res) {
-
+// this will do the the web hook for github
+function gitLab(req, res) {
 	var id = req.body.project.id;
 	var ref = req.body.ref;
 
 	findToUpdate(id, ref, res);
-});
+}
+
 
 // This is kept for backward compatibility
-app.post('/git-master-update', function(req, res) {
+app.post('/git-master-update',github);
 
-	var id = req.body.repository.id;
-	var ref = req.body.ref;
+// This is for github web hooks
+app.post('/v1/github', github);
 
-	findToUpdate(id, ref, res);
-});
+// this is for gitlab webhooks
+app.post('/v1/gitlab', gitLab);
+
 
 
 var port = 3002;
