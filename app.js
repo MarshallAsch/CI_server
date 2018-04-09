@@ -12,31 +12,36 @@ var app = express();
 
 var util = require('util');
 var exec = require('child_process').exec;
-var child;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
 
 
-// This is for github web hooks
-app.post('/v1/github', function(req, res) {
+// This will run the update script in a seperate process
+function runScript(script) {
 
-	var id = req.body.repository.id;
-	var ref = req.body.ref;
+	let child = exec(script, function (error, stdout, stderr) {
+		console.log('stdout: ' + stdout);
+		console.log('stderr: ' + stderr);
+		if (error !== null) {
+			console.log('exec error: ' + error);
+		}
+	});
+}
+
+// this function will check the configuration file for a matchinig script to run
+function findToUpdate(id, ref, res) {
+
 	var foundServer = 0;
 
+	// check all of the repositories that this is responcible for
 	for (var i = 0; i < configuration.servers.length; i++)
 	{
-		console.log(id + " " + configuration.servers[i].repositoryID);
+		// if it found a match then do the task
 		if (configuration.servers[i].repositoryID == id && configuration.servers[i].ref == ref) {
-			child = exec(configuration.servers[i].runScript, function (error, stdout, stderr) {
-				console.log('stdout: ' + stdout);
-				console.log('stderr: ' + stderr);
-		 		if (error !== null) {
-					console.log('exec error: ' + error);
-				}
-			});
+
+			runScript(configuration.servers[i].runScript);
 
 			res.status(200);
 			res.send(JSON.stringify({"status": 200}));
@@ -46,10 +51,22 @@ app.post('/v1/github', function(req, res) {
 		}
 	}
 
+	// send error respoince if it is no match
 	if (foundServer === 0) {
 		res.status(404);
 		res.send(JSON.stringify({"status": 404, "message": "Rule for repository \"" + req.body.repository.name + "\" (" + id + ") not found"}));
 	}
+}
+
+
+// This is for github web hooks
+app.post('/v1/github', function(req, res) {
+
+	var id = req.body.repository.id;
+	var ref = req.body.ref;
+
+	findToUpdate(id, ref, res);
+
 });
 
 
@@ -58,65 +75,17 @@ app.post('/v1/gitlab', function(req, res) {
 
 	var id = req.body.project.id;
 	var ref = req.body.ref;
-	var foundServer = 0;
 
-	for (var i = 0; i < configuration.servers.length; i++)
-	{
-		console.log(id + " " + configuration.servers[i].repositoryID);
-		if (configuration.servers[i].repositoryID == id && configuration.servers[i].ref == ref) {
-			child = exec(configuration.servers[i].runScript, function (error, stdout, stderr) {
-				console.log('stdout: ' + stdout);
-				console.log('stderr: ' + stderr);
-		 		if (error !== null) {
-					console.log('exec error: ' + error);
-				}
-			});
-
-			res.status(200);
-			res.send(JSON.stringify({"status": 200}));
-			foundServer = 1;
-
-			break;
-		}
-	}
-
-	if (foundServer === 0) {
-		res.status(404);
-		res.send(JSON.stringify({"status": 404, "message": "Rule for repository \"" + req.body.repository.name + "\" (" + id + ") not found"}));
-	}
+	findToUpdate(id, ref, res);
 });
 
-
+// This is kept for backward compatibility
 app.post('/git-master-update', function(req, res) {
 
 	var id = req.body.repository.id;
 	var ref = req.body.ref;
-	var foundServer = 0;
 
-	for (var i = 0; i < configuration.servers.length; i++)
-	{
-		console.log(id + " " + configuration.servers[i].repositoryID);
-		if (configuration.servers[i].repositoryID == id && configuration.servers[i].ref == ref) {
-			child = exec(configuration.servers[i].runScript, function (error, stdout, stderr) {
-				console.log('stdout: ' + stdout);
-				console.log('stderr: ' + stderr);
-		 		if (error !== null) {
-					console.log('exec error: ' + error);
-				}
-			});
-
-			res.status(200);
-			res.send(JSON.stringify({"status": 200}));
-			foundServer = 1;
-
-			break;
-		}
-	}
-
-	if (foundServer === 0) {
-		res.status(404);
-		res.send(JSON.stringify({"status": 404, "message": "Rule for repository \"" + req.body.repository.name + "\" (" + id + ") not found"}));
-	}
+	findToUpdate(id, ref, res);
 });
 
 

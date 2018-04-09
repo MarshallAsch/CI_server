@@ -1,3 +1,5 @@
+[![Maintainability](https://api.codeclimate.com/v1/badges/e4094b17da2b2b66650f/maintainability)](https://codeclimate.com/github/MarshallAsch/CI_server/maintainability)
+
 # Continuous Integration Server
 
 This is a generic continuous integration server that will listen to webhooks to
