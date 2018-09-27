@@ -31,7 +31,7 @@ function runScript(script) {
 }
 
 // this function will check the configuration file for a matchinig script to run
-function findToUpdate(id, ref, res) {
+function findToUpdate(req, id, ref, res) {
 
 	var foundServer = 0;
 
@@ -64,7 +64,7 @@ function github(req, res) {
 	var id = req.body.repository.id;
 	var ref = req.body.ref;
 
-	findToUpdate(id, ref, res);
+	findToUpdate(req, id, ref, res);
 }
 
 // this will do the the web hook for github
@@ -72,7 +72,7 @@ function gitLab(req, res) {
 	var id = req.body.project.id;
 	var ref = req.body.ref;
 
-	findToUpdate(id, ref, res);
+	findToUpdate(req, id, ref, res);
 }
 
 
