@@ -21,7 +21,7 @@ app.use(bodyParser.json());
 // This will run the update script in a seperate process
 function runScript(script) {
 
-	let child = exec(script, function (error, stdout, stderr) {
+	var child = exec(script, function (error, stdout, stderr) {
 		console.log('stdout: ' + stdout);
 		console.log('stderr: ' + stderr);
 		if (error !== null) {
