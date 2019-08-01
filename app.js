@@ -1,78 +1,109 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var http = require("http");
+const express = require('express');
+const bodyParser = require('body-parser');
+const http = require("http");
 
-var fs = require("fs");
+const fs = require("fs");
 
-var configuration = fs.readFileSync(__dirname + "/integrationFor.json");
+const wait = require("wait-for-stuff");
 
+let configuration = fs.readFileSync(__dirname + "/integrationFor.json");
 configuration = JSON.parse(configuration);
-var app = express();
+
+const app = express();
 
 
-var util = require('util');
-var exec = require('child_process').exec;
+const util = require('util');
+const exec = require('child_process').exec;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname));
 app.use(bodyParser.json());
 
+app.locals.results = [];
 
-// This will run the update script in a seperate process
+
+// This will run the update script in a separate process
 function runScript(script) {
 
-	var child = exec(script, function (error, stdout, stderr) {
+	const timestamp = Date.now() + "";
+
+	app.locals.results[timestamp] = {
+		done: false,
+	};
+
+	const child = exec(script, function (error, stdout, stderr) {
 		console.log('stdout: ' + stdout);
 		console.log('stderr: ' + stderr);
+
+
+		app.locals.results[timestamp].status = 200;
+		app.locals.results[timestamp].stdout = stdout;
+		app.locals.results[timestamp].stderr = stderr;
+
 		if (error !== null) {
+			app.locals.results[timestamp].status = 500;
 			console.log('exec error: ' + error);
 		}
+
+		app.locals.results[timestamp].done = true;
+
 	});
+
+	return timestamp;
 }
 
-// this function will check the configuration file for a matchinig script to run
-function findToUpdate(req, id, ref, res) {
+// this function will check the configuration file for a matching script to run
+function findToUpdate(id, ref, name, event, res) {
 
-	var foundServer = 0;
+	let foundServer = false;
 
-	// check all of the repositories that this is responcible for
-	for (var i = 0; i < configuration.servers.length; i++)
-	{
-		// if it found a match then do the task
-		if (configuration.servers[i].repositoryID == id && configuration.servers[i].ref == ref) {
+	configuration.servers.forEach((server) => {
 
-			runScript(configuration.servers[i].runScript);
+		if (server.repositoryID === id && server.ref === ref) {
+
+			// skip if it needs an event and it does not match
+			if (server.event && server.event !== event) {
+				return;
+			}
+
+			const timestamp = runScript(server.runScript);
 
 			res.status(200);
-			res.send(JSON.stringify({"status": 200}));
-			foundServer = 1;
-
-			break;
+			res.send(JSON.stringify({"key": timestamp}));
+			foundServer = true;
 		}
-	}
+	});
 
-	// send error respoince if it is no match
-	if (foundServer === 0) {
+	// send error response if it is no match
+	if (!foundServer) {
 		res.status(404);
-		res.send(JSON.stringify({"status": 404, "message": "Rule for repository \"" + req.body.repository.name + "\" (" + id + ") not found"}));
+		res.json({
+			"status": 404,
+			"message": "Rule for repository \"" + name + "\" (" + id + ") not found"
+		});
 	}
 }
 
 
 // this will do the the web hook for github
 function github(req, res) {
-	var id = req.body.repository.id;
-	var ref = req.body.ref;
+	const id = req.body.repository.id;
+	const ref = req.body.ref;
+	const name = req.body.repository.name;
+	const eventType = req.header("X-GitHub-Event");
 
-	findToUpdate(req, id, ref, res);
+	findToUpdate(id, ref, name, eventType, res);
 }
 
 // this will do the the web hook for github
 function gitLab(req, res) {
-	var id = req.body.project.id;
-	var ref = req.body.ref;
+	const id = req.body.project.id;
+	const ref = req.body.ref;
+	const name = req.body.project.name;
+	const eventType = req.body.object_kind;
 
-	findToUpdate(req, id, ref, res);
+
+	findToUpdate(id, ref, name, eventType, res);
 }
 
 
@@ -86,9 +117,39 @@ app.post('/v1/github', github);
 app.post('/v1/gitlab', gitLab);
 
 
-var port = 3002;
+// this is for gitlab webhooks
+app.post('/v1/manual', (req, res) => {
 
-var server = http.createServer(app);
+	const projectId = req.body.id;
+	const branch = req.body.branch;
+	const projectName = req.body.name;
+	const event = req.body.event;
+
+	findToUpdate(projectId, branch, projectName, event, res);
+});
+
+// this is for gitlab webhooks
+app.get('/v1/result/:key', (req, res) => {
+
+	const key = req.params.key;
+	const result = app.locals.results[key];
+
+
+	if (!result) {
+		res.status(404);
+		return res.json({status: 404, message: "not found"});
+	}
+
+
+	wait.for.value(app.locals.results[key], "done",  true);
+
+	res.status(result.status);
+	res.json({status: result.status, stdout: result.stdout, stderr: result.stderr});
+});
+
+
+const port = 3002;
+const server = http.createServer(app);
 
 server.listen(port, 'localhost');
 server.on('listening', function() {

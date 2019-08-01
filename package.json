@@ -4,6 +4,7 @@
   "dependencies": {
     "body-parser": "*",
     "express": "*",
-    "fs": "0.0.1-security"
+    "fs": "0.0.1-security",
+    "wait-for-stuff": "^1.4.0"
   }
 }

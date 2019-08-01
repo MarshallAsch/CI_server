@@ -1,6 +1,5 @@
 [Unit]
 Description=Node.js continous integration server
-#Requires=After=mysql.service       # Requires the mysql service to run first
 
 [Service]
 ExecStart=/usr/local/bin/node /path/to/server/app.js
