@@ -79,7 +79,7 @@ function findToUpdate(id, ref, name, event, res) {
 		res.status(404);
 		res.json({
 			"status": 404,
-			"message": "Rule for repository \"" + name + "\" (" + id + ") not found"
+			"message": "Rule for \"" + (event === undefined ? "none" : event)  + "\" on repository \"" + name + "\" (" + id + ") not found"
 		});
 	}
 }
