@@ -23,7 +23,7 @@ app.locals.results = [];
 
 
 // This will run the update script in a separate process
-function runScript(script) {
+function runScript(script, argument="") {
 
 	const timestamp = Date.now() + "";
 
@@ -31,7 +31,7 @@ function runScript(script) {
 		done: false,
 	};
 
-	const child = exec(script, function (error, stdout, stderr) {
+	const child = exec(script + " " + argument  , function (error, stdout, stderr) {
 		console.log('stdout: ' + stdout);
 		console.log('stderr: ' + stderr);
 
@@ -53,7 +53,7 @@ function runScript(script) {
 }
 
 // this function will check the configuration file for a matching script to run
-function findToUpdate(id, ref, name, event, res) {
+function findToUpdate(res, id, ref, name, event, argument) {
 
 	let foundServer = false;
 
@@ -66,7 +66,7 @@ function findToUpdate(id, ref, name, event, res) {
 				return;
 			}
 
-			const timestamp = runScript(server.runScript);
+			const timestamp = runScript(server.runScript, argument);
 
 			res.status(200);
 			res.send(JSON.stringify({"key": timestamp}));
@@ -92,7 +92,7 @@ function github(req, res) {
 	const name = req.body.repository.name;
 	const eventType = req.header("X-GitHub-Event");
 
-	findToUpdate(id, ref, name, eventType, res);
+	findToUpdate(res, id, ref, name, eventType);
 }
 
 // this will do the the web hook for github
@@ -103,7 +103,7 @@ function gitLab(req, res) {
 	const eventType = req.body.object_kind;
 
 
-	findToUpdate(id, ref, name, eventType, res);
+	findToUpdate(res, id, ref, name, eventType);
 }
 
 
@@ -124,8 +124,9 @@ app.post('/v1/manual', (req, res) => {
 	const branch = req.body.branch;
 	const projectName = req.body.name;
 	const event = req.body.event;
+	const argument = req.body.argument;
 
-	findToUpdate(projectId, branch, projectName, event, res);
+	findToUpdate(res, projectId, branch, projectName, event, argument);
 });
 
 // this is for gitlab webhooks
