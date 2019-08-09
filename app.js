@@ -59,7 +59,12 @@ function findToUpdate(res, id, ref, name, eventType, event, argument) {
 
 	configuration.servers.forEach((server) => {
 
-		if (server.repositoryID === id && server.ref === ref) {
+		if (server.repositoryID === id) {
+
+			// skip if it needs an specific branch and it does not match
+			if (server.ref && server.ref !== ref) {
+				return;
+			}
 
 			// skip if it needs an event and it does not match
 			if (server.event && server.event !== eventType) {
@@ -68,9 +73,11 @@ function findToUpdate(res, id, ref, name, eventType, event, argument) {
 
 			const timestamp = runScript(server.runScript, eventType, event, argument);
 
-			res.status(200);
-			res.send(JSON.stringify({"key": timestamp}));
-			foundServer = true;
+			if (!foundServer) {
+				res.status(200);
+				res.send(JSON.stringify({"key": timestamp}));
+				foundServer = true;
+			}
 		}
 	});
 

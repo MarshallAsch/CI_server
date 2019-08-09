@@ -10,5 +10,8 @@ It is a node.js server that will currently only listen to [push events](https://
 
 This can be configured by adding elements to the integrationFor.json file.
 
+Scripts can be specified to run for specific projects, but can be specified for specific branches or events.
+
+If a hook matches multiple scripts then a response will only be sent for the first script that is ran. 
 
 This was originally created for CIS*3750 and has been modified to be more generic.
