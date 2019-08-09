@@ -2,17 +2,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const http = require("http");
 
-const fs = require("fs");
-
 const wait = require("wait-for-stuff");
 
-let configuration = fs.readFileSync(__dirname + "/integrationFor.json");
-configuration = JSON.parse(configuration);
+const configuration = require("./integrationFor.json");
 
 const app = express();
 
-
-const util = require('util');
 const exec = require('child_process').exec;
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -94,7 +89,7 @@ function findToUpdate(res, id, ref, name, eventType, event, argument) {
 
 // this will do the the web hook for github
 function github(req, res) {
-	const id = req.body.repository.id;
+	const id = req.body.repository.id + "";
 	const ref = req.body.ref;
 	const name = req.body.repository.name;
 	const eventType = req.header("X-GitHub-Event");
@@ -104,7 +99,7 @@ function github(req, res) {
 
 // this will do the the web hook for github
 function gitLab(req, res) {
-	const id = req.body.project.id;
+	const id = req.body.project.id + "";
 	const ref = req.body.ref;
 	const name = req.body.project.name;
 	const eventType = req.body.object_kind;
@@ -127,7 +122,7 @@ app.post('/v1/gitlab', gitLab);
 // this is for gitlab webhooks
 app.post('/v1/manual', (req, res) => {
 
-	const projectId = req.body.id;
+	const projectId = req.body.id + "";
 	const branch = req.body.branch;
 	const projectName = req.body.name;
 	const event = req.body.event;
