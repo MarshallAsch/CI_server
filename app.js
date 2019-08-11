@@ -26,7 +26,14 @@ function runScript(script, eventType, event, argument="") {
 		done: false,
 	};
 
-	const child = exec(`${script} "${eventType}" "${JSON.stringify(event).replace(/"/gi, '\\\"')}"  ${argument}`  , function (error, stdout, stderr) {
+	// escape characters that need to be escaped
+	let eventStr = JSON.stringify(event);
+	eventStr = eventStr.replace(/\\/gi, '\\\\');
+	eventStr = eventStr.replace(/"/gi, '\\\"');
+	eventStr = eventStr.replace(/\$/gi, '\\$');
+
+
+	const child = exec(`${script} "${eventType}" "${eventStr}"  ${argument}`  , function (error, stdout, stderr) {
 		console.log('stdout: ' + stdout);
 		console.log('stderr: ' + stderr);
 
